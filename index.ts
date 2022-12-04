@@ -1,6 +1,13 @@
 import express from "express";
+import {connect as dbConnect} from 'mongoose'
 import axios from "axios";
-import dis from './utilites'
+import dis from './utils'
+import {IDronePayload} from './models/drone'
+import { createSlice, configureStore, PayloadAction } from '@reduxjs/toolkit'
+import {decremented,incremented,counterSlice} from './store'
+import {job,job2} from './scheduler'
+import {store} from './store'
+
 const parse = require("xml2js-parser").parseString;
 const {
   ToadScheduler,
@@ -10,7 +17,6 @@ const {
 } = require("toad-scheduler");
 
 const app = express();
-
 const scheduler = new ToadScheduler();
 
 export type droneDataType = {
@@ -26,117 +32,172 @@ type resp = {
   posY:number
 };
 
-const droneReport: {
-  [k: string]: {
-    square_dist:number,
-    timestamp: number;
-    posX:number,
-    posY:number
-  };
-} = {};
+type Report = {
+    [k: string]: {
+      square_dist:number,
+      timestamp: number;
+      posX:number,
+      posY:number
+    };
+  }
 
-const task2 = new Task('complex task',()=>{
-   for(const k in droneReport){
-      const date = droneReport[k].timestamp
-      const curDate = Date.now()
-      console.log("I ran")
-      const diff = curDate - date;
-      const min = Math.round(((diff % 86400000) % 3600000) / 60000);
-      if(min>=1){
-        console.log('removed')
-        delete droneReport['k']
-        console.log(k)
-        console.log(droneReport)
-      }
-   }
-})
+// const droneReport:Report  = {};
 
-const task = new AsyncTask("simple task", () => {
-  return axios
-    .get("https://assignments.reaktor.com/birdnest/drones", {
-      headers: {
-        "Content-Type": "text/xml",
-      },
-    })
-    .then((e) => {
-      parse(e.data, function (err: any, result: any) {
-        const droneData: droneDataType[] = result.report.capture[0].drone;
-        const timestamp: string =
-          result.report.capture[0]["$"]["snapshotTimestamp"];
-        const drone: resp[] = droneData
-          .filter((e) => {
-            const x = 250000 - e.positionX[0];
-            const y = 250000 - e.positionY[0];
-            const sqr_dist = x * x + y * y
+// const counterSlice = createSlice({
+//     name: 'counter',
+//     initialState: {
+//     },
+//     reducers: {
+//       incremented: (state:Report,action:PayloadAction<resp[]>) => {
+//         action.payload.forEach((e:resp) => {
+//             if (e.serialNumber in state) {
+//               state[e.serialNumber] = {
+//                 // square_dist:(temp_dis>droneReport[e.serialNumber].square_dist?droneReport[e.serialNumber].square_dist:temp_dis),
+//                 square_dist:dis(e.posX,e.posY),
+//                 timestamp: Date.now(),
+//                 posX:e.posX,
+//                 posY:e.posY
+//               };
+//             } else {
+//               state[e.serialNumber] = {
+//                 square_dist:dis(e.posX,e.posY),
+//                 timestamp: Date.now(),
+//                 posX:e.posX,
+//                 posY:e.posY
+//               };
+//             }
+//           })
+//       },
+//       decremented: (state:Report) => {
+//         const key:string[]=[]
+//         Object.keys(state).forEach(k=>{
+//                   const date = state[k].timestamp
+//                   const curDate = Date.now()
+//                   console.log("I ran")
+//                   const diff = curDate - date;
+//                   const min = Math.round(((diff % 86400000) % 3600000) / 60000);
+//                   if(min>=10){
+//                      delete state[k]
+//                   }
+//                 })
+
+        
+//       }
+//     }
+//   })
+
+//   export const { incremented, decremented } = counterSlice.actions
+
+
+
+
+
+// const task2 = new Task('complex task',()=>{
+//     store.dispatch(decremented())
+// })
+
+// const task = new AsyncTask("simple task", () => {
+//   return axios
+//     .get("https://assignments.reaktor.com/birdnest/drones", {
+//       headers: {
+//         "Content-Type": "text/xml",
+//       },
+//     })
+//     .then((e) => {
+//       parse(e.data, function (err: any, result: any) {
+//         const droneData: droneDataType[] = result.report.capture[0].drone;
+//         const timestamp: string = result.report.capture[0]["$"]["snapshotTimestamp"];
+//         const drone: resp[] = droneData
+//           .filter((e) => {
+//             const x = 250000 - e.positionX[0];
+//             const y = 250000 - e.positionY[0];
+//             const sqr_dist = x * x + y * y
             
-            if (sqr_dist <= 100000 * 100000) return true;
-          })
-          .map((e) => {
-            const x = 250000 - e.positionX[0];
-            const y = 250000 - e.positionY[0];
-            const sqr_dist = x * x + y * y
-            return {
-              square_dist:sqr_dist,
-              serialNumber: e.serialNumber[0],
-              posX:e.positionX[0],
-              posY:e.positionY[0]
-            };
-          });
-        if (drone.length >= 1) {
-          drone.forEach((e) => {
-            if (e.serialNumber in droneReport) {
-              const temp_dis = e.square_dist
-              droneReport[e.serialNumber] = {
-                // square_dist:(temp_dis>droneReport[e.serialNumber].square_dist?droneReport[e.serialNumber].square_dist:temp_dis),
-                square_dist:dis(e.posX,e.posY),
-                timestamp: Date.now(),
-                posX:e.posX,
-                posY:e.posY
-              };
-            } else {
-              droneReport[e.serialNumber] = {
-                square_dist:dis(e.posX,e.posY),
-                timestamp: Date.now(),
-                posX:e.posX,
-                posY:e.posY
-              };
-            }
-          });
-          console.log(Object.keys(droneReport).length)
-        // console.log(droneReport)
-        }
-      });
-    })
-    .catch((e) => {
-      console.log(e);
-    });
-});
+//             if (sqr_dist <= 100000 * 100000) return true;
+//           })
+//           .map((e) => {
+//             const x = e.positionX[0];
+//             const y = e.positionY[0];
+//             const sqr_dist = x * x + y * y
+//             return {
+//               square_dist:dis(x,y),
+//               serialNumber: e.serialNumber[0],
+//               posX:e.positionX[0],
+//               posY:e.positionY[0]
+//             };
+//           });
+//         if (drone.length >= 1) {
 
-const job = new SimpleIntervalJob({ seconds: 5, runImmediately: true }, task, {
-  id: "id_1",
-  preventOverrun: true,
-});
+            // DroneModel.insertMany(drone).then(e=>{
+            //       console.log(e)
+            // }).catch(e=>{
+            //       console.log(e)
+            // })
+        //   drone.forEach((e) => {
+        //     if (e.serialNumber in droneReport) {
+        //       droneReport[e.serialNumber] = {
+        //         // square_dist:(temp_dis>droneReport[e.serialNumber].square_dist?droneReport[e.serialNumber].square_dist:temp_dis),
+        //         square_dist:dis(e.posX,e.posY),
+        //         timestamp: Date.now(),
+        //         posX:e.posX,
+        //         posY:e.posY
+        //       };
+        //     } else {
+        //       droneReport[e.serialNumber] = {
+        //         square_dist:dis(e.posX,e.posY),
+        //         timestamp: Date.now(),
+        //         posX:e.posX,
+        //         posY:e.posY
+        //       };
+        //     }
+        //   });
+        //   console.log(Object.keys(droneReport).length)
+        //   console.log(droneReport)
 
-const job2 = new SimpleIntervalJob({ seconds: 60, runImmediately: true }, task2, {
-    id: "id_2",
-    preventOverrun: true,
-  });
+//         store.dispatch(incremented(drone))
 
-scheduler.addSimpleIntervalJob(job);
-scheduler.addSimpleIntervalJob(job2);
+//         }
+//       });
+//     })
+//     .catch((e) => {
+//       console.log(e);
+//     });
+// });
 
-app.use("/", (req, res, next) => {
-  console.log("hello");
-  next();
-});
+// const job = new SimpleIntervalJob({ seconds: 5, runImmediately: true }, task, {
+//   id: "id_1",
+//   preventOverrun: true,
+// });
 
-app.use("/add", (req, res, next) => {
+// const job2 = new SimpleIntervalJob({ seconds: 300, runImmediately: true }, task2, {
+//     id: "id_2",
+//     preventOverrun: true,
+//   });
+
+
+
+
+
+
+
+
+app.get("/add", (req, res, next) => {
   console.log("hello");
   res.send("<h1>This is the heading</h1>");
 });
 
-app.use((req, res, next) => {
-  console.log("hello 2");
-});
+app.get("/upd",(req, res, next) => {
+    console.log("hello");
+    res.send("<h1>This is the heading</h1>");
+  })
 
-app.listen(8080);
+
+dbConnect("mongodb+srv://saurabh1202:saurabhm123@cluster0.6fs87uh.mongodb.net/Drones?retryWrites=true&w=majority").then(res=>{
+    app.listen(8080)
+    scheduler.addSimpleIntervalJob(job)
+    scheduler.addSimpleIntervalJob(job2)
+    store.subscribe(() => console.log(Object.keys(store.getState()).length))
+}).catch(e=>{
+    console.log(e)
+})
+
