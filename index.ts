@@ -23,8 +23,8 @@ io.on("connection", (socket) => {
   console.log("a user connected");
 });
 scheduler.addSimpleIntervalJob(job1);
-// scheduler.addSimpleIntervalJob(job2)
-// store.subscribe(() =>{
-//     io.emit('droneData',store.getState())
-//     console.log('sent')
-// } )
+scheduler.addSimpleIntervalJob(job2)
+store.subscribe(() =>{
+    io.emit('droneData',store.getState())
+    console.log('sent')
+} )

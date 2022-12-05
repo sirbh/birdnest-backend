@@ -39,21 +39,7 @@ exports.task1 = new toad_scheduler_1.AsyncTask("lookForDrone", () => {
                 };
             });
             if (drone.length >= 1) {
-                // store.dispatch(incremented(drone));
-                const reqArr = drone.map(e => {
-                    return e.serialNumber;
-                }).map(e => {
-                    return "https://assignments.reaktor.com/birdnest/pilots/" + e;
-                }).map(e => {
-                    return axios_1.default.get(e);
-                });
-                axios_1.default.all(reqArr).then(e => {
-                    e.forEach(e => {
-                        console.log(e.data);
-                    });
-                }).catch(e => {
-                    console.log(e);
-                });
+                store_1.store.dispatch((0, store_1.incremented)(drone));
             }
         });
     })
