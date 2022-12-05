@@ -2,15 +2,15 @@ import { AsyncTask, Task } from "toad-scheduler";
 import axios from "axios";
 
 import { IDroneResponse, IDronePayload } from "../../models/drone";
-import { incremented, decremented, store } from "../../store";
-import {distance} from "../../utils";
+import { IPilotContactDetails, IPilotDroneDetails } from "../../models/pilot";
+import { saveDroneDetails, cleanDroneDetails, store } from "../../store";
+import { distance } from "../../utils";
 
 const parse = require("xml2js-parser").parseString;
-const droneDataurl = 'https://assignments.reaktor.com/birdnest/drones';
-
+const droneDataurl = "https://assignments.reaktor.com/birdnest/drones";
 
 // check for drones in prohibited zone
-export const task1 = new AsyncTask("lookForDrone", () => {
+export const task1 = new AsyncTask("lookForDrone", async () => {
   return axios
     .get(droneDataurl, {
       headers: {
@@ -22,11 +22,7 @@ export const task1 = new AsyncTask("lookForDrone", () => {
         const droneData: IDroneResponse[] = result.report.capture[0].drone;
         const drone: IDronePayload[] = droneData
           .filter((e) => {
-            const x = 250000 - e.positionX[0];
-            const y = 250000 - e.positionY[0];
-            const sqr_dist = x * x + y * y;
-
-            if (sqr_dist <= 100000 * 100000) return true;
+            if (distance(e.positionX[0], e.positionY[0]) < 100) return true;
           })
           .map((e) => {
             return {
@@ -34,11 +30,43 @@ export const task1 = new AsyncTask("lookForDrone", () => {
               serialNumber: e.serialNumber[0],
               posX: e.positionX[0],
               posY: e.positionY[0],
+
               timestamp: Date.now(),
             };
           });
         if (drone.length >= 1) {
-          store.dispatch(incremented(drone));
+          console.log(drone);
+          // store.dispatch(incremented(drone));
+          Promise.all(
+            drone.map(async (e) => {
+              let pilotDetails: IPilotDroneDetails;
+              try {
+                const res = await axios.get<IPilotContactDetails>(
+                  `https://assignments.reaktor.com/birdnest/pilots/` +
+                    e.serialNumber
+                );
+                pilotDetails = {
+                  distance: e.squareDist,
+                  email: res.data.email,
+                  name: res.data.firstName + " " + res.data.lastName,
+                  phone: res.data.phoneNumber,
+                  serialNumber: e.serialNumber,
+                };
+              } catch (error) {
+                pilotDetails = {
+                  distance: e.squareDist,
+                  email: "",
+                  name: "",
+                  phone: "",
+                  serialNumber: e.serialNumber,
+                };
+              }
+
+              return pilotDetails;
+            })
+          ).then((data) => {
+            store.dispatch(saveDroneDetails(data));
+          });
         }
       });
     })
@@ -47,8 +75,7 @@ export const task1 = new AsyncTask("lookForDrone", () => {
     });
 });
 
-
 //cleanes the unwanted drone data
 export const task2 = new Task("cleanup", () => {
-  store.dispatch(decremented());
+  store.dispatch(cleanDroneDetails());
 });

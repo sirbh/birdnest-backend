@@ -2,7 +2,6 @@
 var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.decremented = exports.incremented = exports.store = exports.counterSlice = void 0;
-const utils_1 = require("../utils");
 const toolkit_1 = require("@reduxjs/toolkit");
 exports.counterSlice = (0, toolkit_1.createSlice)({
     name: "counter",
@@ -13,20 +12,22 @@ exports.counterSlice = (0, toolkit_1.createSlice)({
                 if (e.serialNumber in state) {
                     state[e.serialNumber] = {
                         //checking if old distance is smaller than new one
-                        squareDist: state[e.serialNumber].squareDist > (0, utils_1.distance)(e.posX, e.posY)
-                            ? (0, utils_1.distance)(e.posX, e.posY)
-                            : state[e.serialNumber].squareDist,
+                        name: e.name,
+                        email: e.phone,
+                        phone: e.phone,
+                        distance: state[e.serialNumber].distance > e.distance
+                            ? e.distance
+                            : state[e.serialNumber].distance,
                         timestamp: Date.now(),
-                        posX: e.posX,
-                        posY: e.posY,
                     };
                 }
                 else {
                     state[e.serialNumber] = {
-                        squareDist: (0, utils_1.distance)(e.posX, e.posY),
+                        name: e.name,
+                        email: e.phone,
+                        phone: e.phone,
+                        distance: e.distance,
                         timestamp: Date.now(),
-                        posX: e.posX,
-                        posY: e.posY,
                     };
                 }
             });

@@ -1,38 +1,40 @@
-import { distance } from "../utils";
 import { createSlice, configureStore, PayloadAction } from "@reduxjs/toolkit";
-import { IDrone, IDroneState, IDronePayload } from "../models/drone";
+import {  IDroneState } from "../models/drone";
+import { IPilotDroneState,IPilotDroneDetails} from "../models/pilot"
 
-export const counterSlice = createSlice({
+export const droneSlice = createSlice({
   name: "counter",
   initialState: {},
   reducers: {
-    incremented: (
-      state: IDroneState,
-      action: PayloadAction<IDronePayload[]>
+    saveDroneDetails: (
+      state: IPilotDroneState,
+      action: PayloadAction<IPilotDroneDetails[]>
     ) => {
-      action.payload.forEach((e: IDronePayload) => {
+      action.payload.forEach((e: IPilotDroneDetails) => {
         if (e.serialNumber in state) {
           state[e.serialNumber] = {
             //checking if old distance is smaller than new one
-            squareDist:
-              state[e.serialNumber].squareDist > distance(e.posX, e.posY)
-                ? distance(e.posX, e.posY)
-                : state[e.serialNumber].squareDist,
+            name:e.name,
+            email:e.phone,
+            phone:e.phone,
+            distance:
+              state[e.serialNumber].distance > e.distance
+                ? e.distance
+                : state[e.serialNumber].distance,
             timestamp: Date.now(),
-            posX: e.posX,
-            posY: e.posY,
           };
         } else {
           state[e.serialNumber] = {
-            squareDist: distance(e.posX, e.posY),
+            name:e.name,
+            email:e.phone,
+            phone:e.phone,
+            distance:e.distance,
             timestamp: Date.now(),
-            posX: e.posX,
-            posY: e.posY,
           };
         }
       });
     },
-    decremented: (state: IDroneState) => {
+    cleanDroneDetails: (state: IDroneState) => {
       const key: string[] = [];
       Object.keys(state).forEach((k) => {
         const date = state[k].timestamp;
@@ -49,7 +51,7 @@ export const counterSlice = createSlice({
 });
 
 export const store = configureStore({
-  reducer: counterSlice.reducer,
+  reducer: droneSlice.reducer,
 });
 
-export const { incremented, decremented } = counterSlice.actions;
+export const { saveDroneDetails, cleanDroneDetails } = droneSlice.actions;
