@@ -32,11 +32,6 @@ exports.task1 = new toad_scheduler_1.AsyncTask("lookForDrone", () => __awaiter(v
             const droneData = result.report.capture[0].drone;
             const drone = droneData
                 .filter((e) => {
-                // const x = 250000 - e.positionX[0];
-                // const y = 250000 - e.positionY[0];
-                // const sqr_dist = x * x + y * y;
-                // if (sqr_dist <= 100000 * 100000) return true;
-                console.log(e);
                 if ((0, utils_1.distance)(e.positionX[0], e.positionY[0]) < 100)
                     return true;
             })
@@ -76,7 +71,7 @@ exports.task1 = new toad_scheduler_1.AsyncTask("lookForDrone", () => __awaiter(v
                     }
                     return pilotDetails;
                 }))).then((data) => {
-                    store_1.store.dispatch((0, store_1.incremented)(data));
+                    store_1.store.dispatch((0, store_1.saveDroneDetails)(data));
                 });
             }
         });
@@ -87,5 +82,5 @@ exports.task1 = new toad_scheduler_1.AsyncTask("lookForDrone", () => __awaiter(v
 }));
 //cleanes the unwanted drone data
 exports.task2 = new toad_scheduler_1.Task("cleanup", () => {
-    store_1.store.dispatch((0, store_1.decremented)());
+    store_1.store.dispatch((0, store_1.cleanDroneDetails)());
 });

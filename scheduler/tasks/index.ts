@@ -35,7 +35,6 @@ export const task1 = new AsyncTask("lookForDrone", async () => {
             };
           });
         if (drone.length >= 1) {
-          console.log(drone);
           // store.dispatch(incremented(drone));
           Promise.all(
             drone.map(async (e) => {

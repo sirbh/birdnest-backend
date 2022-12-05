@@ -15,7 +15,7 @@ export const droneSlice = createSlice({
           state[e.serialNumber] = {
             //checking if old distance is smaller than new one
             name:e.name,
-            email:e.phone,
+            email:e.email,
             phone:e.phone,
             distance:
               state[e.serialNumber].distance > e.distance
@@ -26,7 +26,7 @@ export const droneSlice = createSlice({
         } else {
           state[e.serialNumber] = {
             name:e.name,
-            email:e.phone,
+            email:e.email,
             phone:e.phone,
             distance:e.distance,
             timestamp: Date.now(),

@@ -1,13 +1,13 @@
 "use strict";
 var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.decremented = exports.incremented = exports.store = exports.counterSlice = void 0;
+exports.cleanDroneDetails = exports.saveDroneDetails = exports.store = exports.droneSlice = void 0;
 const toolkit_1 = require("@reduxjs/toolkit");
-exports.counterSlice = (0, toolkit_1.createSlice)({
+exports.droneSlice = (0, toolkit_1.createSlice)({
     name: "counter",
     initialState: {},
     reducers: {
-        incremented: (state, action) => {
+        saveDroneDetails: (state, action) => {
             action.payload.forEach((e) => {
                 if (e.serialNumber in state) {
                     state[e.serialNumber] = {
@@ -32,7 +32,7 @@ exports.counterSlice = (0, toolkit_1.createSlice)({
                 }
             });
         },
-        decremented: (state) => {
+        cleanDroneDetails: (state) => {
             const key = [];
             Object.keys(state).forEach((k) => {
                 const date = state[k].timestamp;
@@ -48,6 +48,6 @@ exports.counterSlice = (0, toolkit_1.createSlice)({
     },
 });
 exports.store = (0, toolkit_1.configureStore)({
-    reducer: exports.counterSlice.reducer,
+    reducer: exports.droneSlice.reducer,
 });
-_a = exports.counterSlice.actions, exports.incremented = _a.incremented, exports.decremented = _a.decremented;
+_a = exports.droneSlice.actions, exports.saveDroneDetails = _a.saveDroneDetails, exports.cleanDroneDetails = _a.cleanDroneDetails;
