@@ -1,19 +1,18 @@
-import {
-  ToadScheduler,
-  SimpleIntervalJob,
-  AsyncTask,
-  Task,
-} from "toad-scheduler";
+import { AsyncTask, Task } from "toad-scheduler";
 import axios from "axios";
+
 import { IDroneResponse, IDronePayload } from "../../models/drone";
 import { incremented, decremented, store } from "../../store";
-import dis from "../../utils";
+import {distance} from "../../utils";
 
 const parse = require("xml2js-parser").parseString;
+const droneDataurl = 'https://assignments.reaktor.com/birdnest/drones';
 
+
+// check for drones in prohibited zone
 export const task1 = new AsyncTask("lookForDrone", () => {
   return axios
-    .get("https://assignments.reaktor.com/birdnest/drones", {
+    .get(droneDataurl, {
       headers: {
         "Content-Type": "text/xml",
       },
@@ -30,11 +29,8 @@ export const task1 = new AsyncTask("lookForDrone", () => {
             if (sqr_dist <= 100000 * 100000) return true;
           })
           .map((e) => {
-            const x = e.positionX[0];
-            const y = e.positionY[0];
-            const sqr_dist = x * x + y * y;
             return {
-              squareDist: dis(x, y),
+              squareDist: distance(e.positionX[0], e.positionY[0]),
               serialNumber: e.serialNumber[0],
               posX: e.positionX[0],
               posY: e.positionY[0],
@@ -51,6 +47,8 @@ export const task1 = new AsyncTask("lookForDrone", () => {
     });
 });
 
-export const task2 = new Task('complex task',()=>{
-    store.dispatch(decremented())
-})
+
+//cleanes the unwanted drone data
+export const task2 = new Task("cleanup", () => {
+  store.dispatch(decremented());
+});

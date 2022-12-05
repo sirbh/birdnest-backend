@@ -7,11 +7,13 @@ exports.task2 = exports.task1 = void 0;
 const toad_scheduler_1 = require("toad-scheduler");
 const axios_1 = __importDefault(require("axios"));
 const store_1 = require("../../store");
-const utils_1 = __importDefault(require("../../utils"));
+const utils_1 = require("../../utils");
 const parse = require("xml2js-parser").parseString;
+const droneDataurl = 'https://assignments.reaktor.com/birdnest/drones';
+// check for drones in prohibited zone
 exports.task1 = new toad_scheduler_1.AsyncTask("lookForDrone", () => {
     return axios_1.default
-        .get("https://assignments.reaktor.com/birdnest/drones", {
+        .get(droneDataurl, {
         headers: {
             "Content-Type": "text/xml",
         },
@@ -28,11 +30,8 @@ exports.task1 = new toad_scheduler_1.AsyncTask("lookForDrone", () => {
                     return true;
             })
                 .map((e) => {
-                const x = e.positionX[0];
-                const y = e.positionY[0];
-                const sqr_dist = x * x + y * y;
                 return {
-                    squareDist: (0, utils_1.default)(x, y),
+                    squareDist: (0, utils_1.distance)(e.positionX[0], e.positionY[0]),
                     serialNumber: e.serialNumber[0],
                     posX: e.positionX[0],
                     posY: e.positionY[0],
@@ -40,7 +39,21 @@ exports.task1 = new toad_scheduler_1.AsyncTask("lookForDrone", () => {
                 };
             });
             if (drone.length >= 1) {
-                store_1.store.dispatch((0, store_1.incremented)(drone));
+                // store.dispatch(incremented(drone));
+                const reqArr = drone.map(e => {
+                    return e.serialNumber;
+                }).map(e => {
+                    return "https://assignments.reaktor.com/birdnest/pilots/" + e;
+                }).map(e => {
+                    return axios_1.default.get(e);
+                });
+                axios_1.default.all(reqArr).then(e => {
+                    e.forEach(e => {
+                        console.log(e.data);
+                    });
+                }).catch(e => {
+                    console.log(e);
+                });
             }
         });
     })
@@ -48,6 +61,7 @@ exports.task1 = new toad_scheduler_1.AsyncTask("lookForDrone", () => {
         console.log(e);
     });
 });
-exports.task2 = new toad_scheduler_1.Task('complex task', () => {
+//cleanes the unwanted drone data
+exports.task2 = new toad_scheduler_1.Task("cleanup", () => {
     store_1.store.dispatch((0, store_1.decremented)());
 });
