@@ -13,7 +13,7 @@ exports.droneSlice = (0, toolkit_1.createSlice)({
                     state[e.serialNumber] = {
                         //checking if old distance is smaller than new one
                         name: e.name,
-                        email: e.phone,
+                        email: e.email,
                         phone: e.phone,
                         distance: state[e.serialNumber].distance > e.distance
                             ? e.distance
@@ -24,7 +24,7 @@ exports.droneSlice = (0, toolkit_1.createSlice)({
                 else {
                     state[e.serialNumber] = {
                         name: e.name,
-                        email: e.phone,
+                        email: e.email,
                         phone: e.phone,
                         distance: e.distance,
                         timestamp: Date.now(),
@@ -37,7 +37,7 @@ exports.droneSlice = (0, toolkit_1.createSlice)({
             Object.keys(state).forEach((k) => {
                 const date = state[k].timestamp;
                 const curDate = Date.now();
-                console.log("I ran");
+                console.log("cleanup");
                 const diff = curDate - date;
                 const min = Math.round(((diff % 86400000) % 3600000) / 60000);
                 if (min >= 10) {

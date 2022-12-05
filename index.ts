@@ -21,6 +21,7 @@ const io = new Server(server, {
 });
 io.on("connection", (socket) => {
   console.log("a user connected");
+  io.emit('droneData',store.getState())
 });
 scheduler.addSimpleIntervalJob(job1);
 scheduler.addSimpleIntervalJob(job2)

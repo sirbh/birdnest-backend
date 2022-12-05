@@ -45,7 +45,6 @@ exports.task1 = new toad_scheduler_1.AsyncTask("lookForDrone", () => __awaiter(v
                 };
             });
             if (drone.length >= 1) {
-                console.log(drone);
                 // store.dispatch(incremented(drone));
                 Promise.all(drone.map((e) => __awaiter(this, void 0, void 0, function* () {
                     let pilotDetails;
