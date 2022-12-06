@@ -19,4 +19,4 @@ Builds the app for production to the `dist` folder.\
 
 Node-ExpressJs with Typescript.\
 Redux/Redux Tookit as a central storage.\
-SocketIO for socket connection.\
+SocketIO for socket connection
